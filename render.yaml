@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: fitness-tracker-api
+    runtime: docker
+
+    plan: free
+
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: fitness-db
+          property: connectionString
+
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: fitness-db
+          property: user
+
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: fitness-db
+          property: password
+
+      - key: JWT_SECRET
+        value: U2hyZWVGaXRuZXNzVHJhY2tlclN1cGVyU2VjdXJlS2V5MjAyNlNoYWtleQ==
+
+      - key: JWT_EXPIRATION
+        value: 86400000
+
+databases:
+  - name: fitness-db
+    databaseName: fitness_db
+    user: fitness
