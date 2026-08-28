@@ -3,7 +3,9 @@ package com.fitness.service;
 import com.fitness.dto.request.WorkoutGenerateRequest;
 import com.fitness.dto.response.WorkoutPlanResponse;
 import com.fitness.entity.AIGoal;
+import com.fitness.entity.AIPlanHistory;
 import com.fitness.repository.AIGoalRepository;
+import com.fitness.repository.AIPlanHistoryRepository;
 import com.shreeai.os.platform.sdk.SDKResponse;
 import com.shreeai.os.platform.sdk.ShreeAI;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ public class WorkoutAIService {
 
     private final ShreeAI shreeAI;
     private final AIGoalRepository goalRepository;
+    private final AIPlanHistoryRepository historyRepository;
 
     public WorkoutPlanResponse generatePlan(WorkoutGenerateRequest request) {
 
@@ -47,6 +50,18 @@ public class WorkoutAIService {
                 "COMPREHENSIVE"
         );
 
+        long totalPlans = historyRepository.countByUserId(request.userId());
+
+        AIPlanHistory history = AIPlanHistory.builder()
+                .user(goal.getUser())
+                .version((int) totalPlans + 1)
+                .objective(objective)
+                .aiResponse(response.answer())
+                .confidence(response.confidence())
+                .build();
+
+        historyRepository.save(history);
+
         return new WorkoutPlanResponse(
                 "Personalized AI Workout",
                 extractSection(response.answer(), "Executive Summary"),
@@ -61,7 +76,10 @@ public class WorkoutAIService {
                 ),
                 response.confidence()
         );
+
     }
+
+
 
     private String extractSection(String markdown, String heading) {
         String marker = "## " + heading;
