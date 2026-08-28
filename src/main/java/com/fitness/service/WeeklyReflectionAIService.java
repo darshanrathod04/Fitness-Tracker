@@ -1,5 +1,6 @@
 package com.fitness.service;
 
+import com.fitness.dto.ai.MemoryContext;
 import com.fitness.dto.request.WeeklyReflectionRequest;
 import com.fitness.dto.response.WeeklyReflectionResponse;
 import com.shreeai.os.platform.sdk.SDKResponse;
@@ -13,23 +14,45 @@ import java.util.List;
 public class WeeklyReflectionAIService {
 
     private final ShreeAI shreeAI;
+    private final MemoryContextService memoryContextService;
 
-    public WeeklyReflectionAIService(ShreeAI shreeAI) {
+    public WeeklyReflectionAIService(
+            ShreeAI shreeAI,
+            MemoryContextService memoryContextService
+    ) {
         this.shreeAI = shreeAI;
+        this.memoryContextService = memoryContextService;
     }
 
     public WeeklyReflectionResponse reflect(WeeklyReflectionRequest request) {
 
+        MemoryContext memory = memoryContextService.load(request.userId());
+
         String prompt = """
-                Create a weekly fitness reflection.
+                You are FITPULSE AI Coach.
 
-                Workouts completed: %d
-                Recovery days: %d
-                Average protein: %dg
-                Average sleep: %d hours
+                Goal: %s
+                Experience: %s
+                Target Calories: %d
+                Target Protein: %dg
 
-                Give strengths, improvements and next week's guidance.
+                Previous AI Plans:
+                %s
+
+                This Week:
+                Workouts Completed: %d
+                Recovery Days: %d
+                Average Protein: %dg
+                Average Sleep: %d hours
+
+                Give a personalized weekly reflection with strengths,
+                improvements and next week's guidance.
                 """.formatted(
+                memory.goal(),
+                memory.experience(),
+                memory.targetCalories(),
+                memory.targetProtein(),
+                String.join("\n", memory.recentObjectives()),
                 request.workoutsCompleted(),
                 request.recoveryDays(),
                 request.averageProtein(),
