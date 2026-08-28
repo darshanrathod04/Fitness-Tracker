@@ -6,9 +6,17 @@ public record WorkoutPlanResponse(
 
         String title,
 
-        String summary,
+        String executiveSummary,
+
+        String goal,
+
+        String feasibility,
+
+        String priority,
 
         List<String> workouts,
+
+        List<String> recommendations,
 
         double confidence
 ) {}
