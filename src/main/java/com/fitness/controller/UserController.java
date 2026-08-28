@@ -1,11 +1,11 @@
 package com.fitness.controller;
 
 import com.fitness.dto.response.UserResponse;
+import com.fitness.entity.User;
 import com.fitness.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class UserController {
 
     @GetMapping("/me")
     public UserResponse profile(@AuthenticationPrincipal User user) {
-        return userService.getProfile(user.getUsername());
+        return userService.getProfile(user.getEmail());
     }
 
     @GetMapping

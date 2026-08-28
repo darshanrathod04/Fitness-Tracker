@@ -21,6 +21,13 @@
 
 	<dependencies>
 
+		<dependency>
+			<groupId>platform</groupId>
+			<artifactId>shreeAiOS</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+
 		<!-- REST API -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
