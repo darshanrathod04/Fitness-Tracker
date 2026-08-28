@@ -1,6 +1,7 @@
 package com.fitness.controller;
 
 
+import com.fitness.dto.request.WorkoutGenerateRequest;
 import com.fitness.dto.request.WorkoutPlanRequest;
 import com.fitness.dto.response.WorkoutPlanResponse;
 import com.fitness.service.WorkoutAIService;
@@ -18,8 +19,8 @@ public class WorkoutAIController {
     }
 
     @PostMapping("/generate")
-    public WorkoutPlanResponse generateWorkout(
-            @Valid @RequestBody WorkoutPlanRequest request
+    public WorkoutPlanResponse generate(
+            @Valid @RequestBody WorkoutGenerateRequest request
     ) {
         return workoutAIService.generatePlan(request);
     }
