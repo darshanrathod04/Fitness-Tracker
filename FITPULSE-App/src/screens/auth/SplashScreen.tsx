@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
+import { Palette, Radii, Spacing, Typography } from '../../theme';
 
 export default function SplashScreen({ navigation }: any) {
   useEffect(() => {
@@ -23,35 +23,41 @@ export default function SplashScreen({ navigation }: any) {
         } else {
           navigation.replace('Login');
         }
-      }, 1800);
+      }, 1600);
     };
 
     init();
-  }, []);
+  }, [navigation]);
 
   return (
     <LinearGradient
-      colors={['#050816', '#111827', '#7C3AED']}
+      colors={['#050816', '#0D1321', Palette.primaryDark]}
       style={styles.container}
     >
-      <StatusBar barStyle="light-content" />
+      <View style={styles.logoWrap}>
+        <LinearGradient
+          colors={[Palette.primary, Palette.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.logoInner}
+        >
+          <Ionicons name="fitness" size={44} color="#fff" />
+        </LinearGradient>
+      </View>
 
-      <Image
-        source={{
-          uri: 'https://img.icons8.com/fluency/240/dumbbell.png',
-        }}
-        style={styles.logo}
-      />
-
-      <Text style={styles.brand}>FITPulse</Text>
+      <Text style={styles.brand}>FITPULSE</Text>
 
       <Text style={styles.tag}>
         Enterprise Fitness Intelligence
       </Text>
 
       <View style={styles.loader}>
-        <View style={styles.dot} />
+        <View style={styles.loaderTrack}>
+          <View style={styles.dot} />
+        </View>
       </View>
+
+      <Text style={styles.version}>v1.0.0 · SOC2-ready</Text>
     </LinearGradient>
   );
 }
@@ -63,38 +69,66 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  logo: {
-    width: 120,
-    height: 120,
+  logoWrap: {
+    width: 112,
+    height: 112,
+    borderRadius: Radii.xxl,
+    padding: 3,
+    backgroundColor: Palette.glassBorder,
+  },
+
+  logoInner: {
+    flex: 1,
+    borderRadius: Radii.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Palette.primary,
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
   },
 
   brand: {
+    ...Typography.display,
     color: '#fff',
-    fontSize: 36,
-    fontWeight: '800',
-    marginTop: 18,
-    letterSpacing: 1,
+    marginTop: Spacing.xxl,
+    letterSpacing: 2,
   },
 
   tag: {
+    ...Typography.caption,
     color: '#C4B5FD',
-    marginTop: 8,
-    fontSize: 15,
+    marginTop: Spacing.sm,
   },
 
   loader: {
-    marginTop: 50,
-    width: 70,
-    height: 8,
-    backgroundColor: '#312E81',
-    borderRadius: 20,
+    marginTop: Spacing.huge,
+    width: 140,
+    height: 6,
+    borderRadius: Radii.pill,
+    backgroundColor: Palette.surfaceRaised,
     overflow: 'hidden',
   },
 
+  loaderTrack: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+
   dot: {
-    width: 35,
-    height: 8,
-    backgroundColor: '#22D3EE',
-    borderRadius: 20,
+    width: 45,
+    height: 6,
+    borderRadius: Radii.pill,
+    backgroundColor: Palette.secondary,
+    alignSelf: 'flex-start',
+  },
+
+  version: {
+    ...Typography.micro,
+    color: Palette.textMuted,
+    position: 'absolute',
+    bottom: 48,
   },
 });

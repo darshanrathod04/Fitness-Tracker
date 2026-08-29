@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
-import { useAIStore } from "../store/aiStore";
-import { useAuthStore } from "../store/authStore";
+
+import { useAIStore } from "../../store/aiStore";
+import { useAuthStore } from "../../store/authStore";
 import {
   View,
   Text,
@@ -68,6 +69,13 @@ export default function GoalsScreen() {
      return Alert.alert(
        "Validation",
        "Title and target are required"
+     );
+   }
+
+   if (!user?.id) {
+     return Alert.alert(
+       "Error",
+       "You must be signed in to save a goal."
      );
    }
 

@@ -1,268 +1,252 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
+import { useAuthStore } from '../../store/authStore';
 
 import { getMe } from '../../api/userApi';
+import {
+  AppCard,
+  Avatar,
+  Badge,
+  ScreenContainer,
+  SectionHeader,
+} from '../../components/ui';
+import { Palette, Radii, Spacing, Typography } from '../../theme';
 
 const FEATURES = [
-  { name: 'Goals', icon: 'flag' as any, screen: 'Goals' },
-  { name: 'Nutrition', icon: 'restaurant' as any, screen: 'Nutrition' },
-  { name: 'Weight Log', icon: 'scale' as any, screen: 'Weight' },
-  { name: 'Achievements', icon: 'trophy' as any, screen: 'Achievements' },
-  { name: 'Progress', icon: 'stats-chart' as any, screen: 'Progress' },
+  { name: 'Goals', icon: 'flag' as any, screen: 'Goals', tint: '#F472B6' },
+  { name: 'Nutrition', icon: 'restaurant' as any, screen: 'Nutrition', tint: '#22D3EE' },
+  { name: 'Weight Log', icon: 'scale' as any, screen: 'Weight', tint: '#FBBF24' },
+  { name: 'Achievements', icon: 'trophy' as any, screen: 'Achievements', tint: '#FBBF24' },
+  { name: 'Progress', icon: 'stats-chart' as any, screen: 'Progress', tint: '#4ADE80' },
 ];
 
-export default function ProfileScreen({
-  navigation,
-}: any) {
-  const [user, setUser] = useState<any>();
+interface UserData {
+  name?: string;
+  email?: string;
+  role?: string;
+  age?: number | null;
+  height?: number | null;
+  weight?: number | null;
+  id?: number;
+}
+
+export default function ProfileScreen({ navigation }: any) {
+  const [user, setUser] = useState<UserData | null>(null);
+  const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
     load();
   }, []);
 
   const load = async () => {
-    const data = await getMe();
-    setUser(data);
+    try {
+      const data = await getMe();
+      setUser(data);
+    } catch (e) {
+      console.log('Profile load error:', e);
+    }
   };
 
-  const bmi = (
-    user?.weight /
-    Math.pow(user?.height / 100, 2)
-  ).toFixed(1);
+  const bmi =
+    user?.weight && user?.height
+      ? (user.weight / Math.pow(user.height / 100, 2)).toFixed(1)
+      : '—';
 
-  const logout = async () => {
-    await SecureStore.deleteItemAsync('jwt');
-
+  const handleLogout = async () => {
+    await logout();
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
     });
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
-    <ScrollView style={styles.container}>
-      <LinearGradient
-        colors={['#7C3AED', '#312E81']}
-        style={styles.header}
-      >
-        <View style={styles.avatar}>
-          <Ionicons
-            name="person"
-            color="#fff"
-            size={44}
-          />
-        </View>
-
-        <Text style={styles.name}>
-          {user?.name}
-        </Text>
-
-        <Text style={styles.email}>
-          {user?.email}
-        </Text>
-      </LinearGradient>
-
-      <View style={styles.body}>
-        <View style={styles.card}>
-          <Text style={styles.section}>Features</Text>
-
-          {FEATURES.map((f) => (
-            <TouchableOpacity
-              key={f.screen}
-              style={styles.featureRow}
-              onPress={() => navigation.navigate(f.screen)}
-            >
-              <View style={styles.featureIcon}>
-                <Ionicons name={f.icon} size={18} color="#22D3EE" />
-              </View>
-
-              <Text style={styles.featureLabel}>{f.name}</Text>
-
-              <Ionicons name="chevron-forward" size={18} color="#64748B" />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.section}>
-            Body Metrics
-          </Text>
-
-          <Row
-            title="Age"
-            value={`${user?.age} yrs`}
-          />
-
-          <Row
-            title="Height"
-            value={`${user?.height} cm`}
-          />
-
-          <Row
-            title="Weight"
-            value={`${user?.weight} kg`}
-          />
-
-          <Row
-            title="BMI"
-            value={bmi}
-          />
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.section}>
-            Account
-          </Text>
-
-          <Row
-            title="Role"
-            value={user?.role}
-          />
-
-          <Row
-            title="Member ID"
-            value={`#${user?.id}`}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.logout}
-          onPress={logout}
+    <ScreenContainer style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {/* Profile header */}
+        <LinearGradient
+          colors={[Palette.primary, Palette.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
         >
-          <Ionicons
-            name="log-out-outline"
-            size={22}
-            color="#fff"
-          />
+          <Avatar name={user?.name} size="xl" />
+          <Text style={styles.name}>{user?.name ?? 'Loading…'}</Text>
+          <Text style={styles.email}>{user?.email ?? ''}</Text>
 
-          <Text style={styles.logoutText}>
-            Logout
-          </Text>
+          <View style={styles.badges}>
+            <Badge
+              label={isAdmin ? 'Administrator' : 'Member'}
+              tone={isAdmin ? 'warning' : 'info'}
+              icon={
+                <Ionicons
+                  name={isAdmin ? 'shield-checkmark' : 'person-circle'}
+                  size={13}
+                  color={isAdmin ? Palette.warning : Palette.info}
+                />
+              }
+            />
+            <Badge label={`ID #${user?.id ?? '—'}`} tone="neutral" />
+          </View>
+        </LinearGradient>
+
+        {/* Metric strip */}
+        <View style={styles.metrics}>
+          <MetricBox label="Age" value={user?.age ? `${user.age} yrs` : '—'} icon="calendar-outline" />
+          <MetricBox label="Height" value={user?.height ? `${user.height} cm` : '—'} icon="resize-outline" />
+          <MetricBox label="Weight" value={user?.weight ? `${user.weight} kg` : '—'} icon="barbell-outline" />
+          <MetricBox label="BMI" value={bmi} icon="pulse-outline" />
+        </View>
+
+        {/* Features */}
+        <View style={styles.section}>
+          <SectionHeader title="Features" subtitle="Your fitness toolkit" />
+          <AppCard padded>
+            {FEATURES.map((f, i) => (
+              <TouchableOpacity
+                key={f.screen}
+                style={[styles.featureRow, i < FEATURES.length - 1 && styles.featureDivider]}
+                onPress={() => navigation.navigate(f.screen)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.featureIcon, { backgroundColor: `${f.tint}22` }]}>
+                  <Ionicons name={f.icon} size={18} color={f.tint} />
+                </View>
+                <Text style={styles.featureLabel}>{f.name}</Text>
+                <Ionicons name="chevron-forward" size={18} color={Palette.textMuted} />
+              </TouchableOpacity>
+            ))}
+          </AppCard>
+        </View>
+{/* Account */}
+        <View style={styles.section}>
+          <SectionHeader title="Account" subtitle="Security & membership" />
+          <AppCard padded>
+            <InfoRow label="Role" value={isAdmin ? 'Administrator' : 'Member'} />
+            <InfoRow label="Email" value={user?.email ?? '—'} />
+            <InfoRow label="Member ID" value={user?.id ? `#${user.id}` : '—'} last />
+          </AppCard>
+        </View>
+
+        {/* Logout */}
+        <TouchableOpacity style={styles.logout} onPress={handleLogout} activeOpacity={0.85}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <Text style={styles.logoutText}>Sign out</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+        <Text style={styles.footer}>FITPULSE · Enterprise Fitness Intelligence v1.0</Text>
+      </ScrollView>
+    </ScreenContainer>
   );
 }
 
-const Row = ({
-  title,
-  value,
-}: any) => (
-  <View style={styles.row}>
-    <Text style={styles.label}>{title}</Text>
-    <Text style={styles.value}>{value}</Text>
-  </View>
-);
+function MetricBox({ label, value, icon }: { label: string; value: string; icon: any }) {
+  return (
+    <View style={styles.metricBox}>
+      <Ionicons name={icon} size={16} color={Palette.primaryLight} />
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function InfoRow({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
+  return (
+    <View style={[styles.row, !last && styles.rowDivider]}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#070B16',
-  },
+  container: { flex: 1 },
+  scroll: { paddingBottom: Spacing.xxxl },
 
   header: {
     alignItems: 'center',
-    paddingTop: 70,
-    paddingBottom: 30,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    borderRadius: Radii.xxl,
+    marginBottom: Spacing.lg,
   },
+  name: { ...Typography.heading, color: '#fff', marginTop: Spacing.md },
+  email: { ...Typography.caption, color: Palette.textOnDark, marginTop: Spacing.xs },
+  badges: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md },
 
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,.2)',
-    justifyContent: 'center',
+  metrics: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  metricBox: {
+    flex: 1,
+    backgroundColor: Palette.surface,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xs,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Palette.border,
   },
-
-  name: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
-    marginTop: 12,
-  },
-
-  email: {
-    color: '#DDD6FE',
-  },
-
-  body: {
-    padding: 18,
-    gap: 18,
-  },
-
-  card: {
-    backgroundColor: '#111827',
-    borderRadius: 22,
-    padding: 18,
-  },
-
-  section: {
-    color: '#fff',
-    fontSize: 18,
+  metricValue: {
+    ...Typography.caption,
+    color: Palette.text,
     fontWeight: '700',
-    marginBottom: 14,
+    marginTop: Spacing.xs,
+    textAlign: 'center',
+  },
+  metricLabel: {
+    ...Typography.micro,
+    color: Palette.textMuted,
+    marginTop: 2,
   },
 
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-
+  section: { marginBottom: Spacing.lg },
+  featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md },
+  featureDivider: { borderBottomWidth: 1, borderBottomColor: Palette.border },
   featureIcon: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0F172A',
+    borderRadius: Radii.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
+  featureLabel: { ...Typography.bodyStrong, color: Palette.text, flex: 1 },
 
-  featureLabel: {
-    color: '#fff',
-    fontWeight: '600',
-    flex: 1,
-  },
-
-  label: {
-    color: '#94A3B8',
-  },
-
-  value: {
-    color: '#fff',
-    fontWeight: '700',
-  },
+  row: { paddingVertical: Spacing.md },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: Palette.border },
+  label: { ...Typography.caption, color: Palette.textMuted },
+  value: { ...Typography.caption, color: Palette.text, fontWeight: '700', marginTop: 2 },
 
   logout: {
-    backgroundColor: '#EF4444',
-    height: 56,
-    borderRadius: 18,
+    flexDirection: 'row',
+    backgroundColor: Palette.dangerDark,
+    height: 54,
+    borderRadius: Radii.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
+    gap: Spacing.sm,
   },
+  logoutText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 
-  logoutText: {
-    color: '#fff',
-    fontWeight: '700',
-    marginLeft: 8,
+  footer: {
+    ...Typography.micro,
+    color: Palette.textMuted,
+    textAlign: 'center',
+    marginTop: Spacing.xxl,
   },
 });

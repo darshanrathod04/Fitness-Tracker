@@ -1,224 +1,231 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
   Alert,
-  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { getMe } from '../../api/userApi';
 
 import API from '../../api/api';
+import { AppButton, FormField, ScreenContainer } from '../../components/ui';
+import { Palette, Radii, Spacing, Typography } from '../../theme';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
-    if (!email || !password) {
-      Alert.alert("Validation", "Email & Password required");
+    if (!email.trim() || !password) {
+      Alert.alert('Validation', 'Email & password are required.');
       return;
     }
 
     try {
       setLoading(true);
 
-      const res = await API.post("/auth/login", {
-        email: email.trim(),
+      const res = await API.post('/auth/login', {
+        email: email.trim().toLowerCase(),
         password,
       });
 
-      console.log("LOGIN SUCCESS =>", res.data);
-
-      await SecureStore.setItemAsync("jwt", res.data.token);
+      await SecureStore.setItemAsync('jwt', res.data.token);
 
       const me = await getMe();
 
       navigation.reset({
         index: 0,
-        routes: [
-          { name: me.role === "ADMIN" ? "Admin" : "Main" }
-        ],
+        routes: [{ name: me.role === 'ADMIN' ? 'Admin' : 'Main' }],
       });
-
     } catch (e: any) {
-        console.log("STATUS:", e?.response?.status);
-        console.log("DATA:", e?.response?.data);
-        console.log("MESSAGE:", e?.message);
-
-        Alert.alert(
-          "Login Failed",
-          JSON.stringify(e?.response?.data || e?.message)
-        );
-      }finally {
+      console.log('Login error:', e?.response?.status, e?.response?.data);
+      Alert.alert(
+        'Login Failed',
+        e?.response?.data?.error || 'Invalid credentials. Please try again.',
+      );
+    } finally {
       setLoading(false);
     }
   };
+
   return (
-    <ImageBackground
-      source={{
-        uri: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200',
-      }}
-      blurRadius={3}
-      style={styles.bg}
-    >
-      <LinearGradient
-        colors={[
-          'rgba(5,8,22,.88)',
-          'rgba(17,24,39,.95)',
-        ]}
-        style={styles.overlay}
+    <ScreenContainer style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text style={styles.logo}>FITPulse</Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Brand hero */}
+          <View style={styles.hero}>
+            <LinearGradient
+              colors={['rgba(124,58,237,0.22)', 'rgba(34,211,238,0.10)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoWrap}
+            >
+              <Ionicons name="fitness" size={34} color={Palette.primaryLight} />
+            </LinearGradient>
 
-        <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.brand}>FITPULSE</Text>
+            <Text style={styles.heroTitle}>Welcome back</Text>
+            <Text style={styles.heroSub}>
+              Sign in to continue your enterprise fitness journey
+            </Text>
+          </View>
 
-        <Text style={styles.sub}>
-          Sign in to continue your transformation
-        </Text>
-
-        <View style={styles.card}>
-          <View style={styles.inputBox}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color="#94A3B8"
-            />
-            <TextInput
-              placeholder="Email Address"
-              placeholderTextColor="#64748B"
+          {/* Form */}
+          <View style={styles.form}>
+            <FormField
+              label="Email"
+              icon="mail-outline"
+              placeholder="you@company.com"
               value={email}
               onChangeText={setEmail}
-              style={styles.input}
               autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
             />
-          </View>
 
-          <View style={styles.inputBox}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color="#94A3B8"
-            />
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#64748B"
+            <FormField
+              label="Password"
+              icon="lock-closed-outline"
+              placeholder="••••••••"
               value={password}
-              secureTextEntry
               onChangeText={setPassword}
-              style={styles.input}
+              secure
+              autoComplete="current-password"
+              onSubmitEditing={login}
+              returnKeyType="go"
+            />
+
+            <View style={styles.optionsRow}>
+              <Pressable style={styles.checkboxRow} onPress={() => setRemember((r) => !r)}>
+                <View style={[styles.checkbox, remember && styles.checkboxOn]}>
+                  {remember ? <Ionicons name="checkmark" size={13} color="#fff" /> : null}
+                </View>
+                <Text style={styles.checkboxLabel}>Remember me</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() =>
+                  Alert.alert('Password Reset', 'Contact your administrator to reset your password.')
+                }
+              >
+                <Text style={styles.forgot}>Forgot password?</Text>
+              </Pressable>
+            </View>
+
+            <AppButton
+              label="Sign In"
+              onPress={login}
+              loading={loading}
+              size="lg"
+              fullWidth
+              style={styles.submit}
             />
           </View>
+{/* Trust footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>New to FITPulse?</Text>
+            <Pressable onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.footerLink}>Create an account</Text>
+            </Pressable>
 
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={login}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>
-                Sign In
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('Register')
-            }
-          >
-            <Text style={styles.link}>
-              Create new account
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </ImageBackground>
+            <View style={styles.securityRow}>
+              <Ionicons name="shield-checkmark-outline" size={14} color={Palette.textMuted} />
+              <Text style={styles.securityLabel}>Enterprise-grade security · SSO-ready</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
-  overlay: {
-    flex: 1,
+  container: { paddingHorizontal: 0 },
+  flex: { flex: 1 },
+  scroll: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xxl },
+
+  hero: { alignItems: 'center', marginTop: Spacing.huge },
+  logoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: Radii.xxl,
     justifyContent: 'center',
-    padding: 26,
-  },
-
-  logo: {
-    color: '#22D3EE',
-    fontSize: 34,
-    fontWeight: '800',
-  },
-
-  title: {
-    color: '#fff',
-    fontSize: 36,
-    fontWeight: '800',
-    marginTop: 12,
-  },
-
-  sub: {
-    color: '#CBD5E1',
-    marginTop: 8,
-    marginBottom: 30,
-  },
-
-  card: {
-    backgroundColor: 'rgba(17,24,39,.75)',
-    borderRadius: 28,
-    padding: 22,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,.08)',
+    borderColor: Palette.glassBorder,
+  },
+  brand: {
+    ...Typography.micro,
+    color: Palette.primaryLight,
+    letterSpacing: 6,
+    marginTop: Spacing.md,
+    fontWeight: '800',
+  },
+  heroTitle: {
+    ...Typography.display,
+    color: Palette.text,
+    marginTop: Spacing.sm,
+  },
+  heroSub: {
+    ...Typography.caption,
+    color: Palette.textMuted,
+    textAlign: 'center',
+    marginTop: Spacing.xs,
   },
 
-  inputBox: {
+  form: { marginTop: Spacing.xxxl },
+  optionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    height: 58,
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xl,
   },
-
-  input: {
-    color: '#fff',
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 15,
-  },
-
-  btn: {
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: '#7C3AED',
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: Palette.borderStrong,
+    backgroundColor: Palette.surfaceHigh,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
   },
+  checkboxOn: { backgroundColor: Palette.primary, borderColor: Palette.primary },
+  checkboxLabel: { ...Typography.caption, color: Palette.textSecondary },
+  forgot: { ...Typography.caption, color: Palette.primaryLight, fontWeight: '600' },
 
-  btnText: {
-    color: '#fff',
-    fontSize: 17,
+  submit: { marginTop: Spacing.xs },
+
+  footer: { alignItems: 'center', marginTop: Spacing.xxxl },
+  footerText: { ...Typography.caption, color: Palette.textMuted },
+  footerLink: {
+    ...Typography.caption,
+    color: Palette.secondary,
     fontWeight: '700',
+    marginTop: Spacing.xs,
   },
-
-  link: {
-    color: '#22D3EE',
-    textAlign: 'center',
-    marginTop: 18,
-    fontWeight: '600',
+  securityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xxl,
   },
+  securityLabel: { ...Typography.micro, color: Palette.textMuted },
 });

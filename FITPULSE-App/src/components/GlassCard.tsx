@@ -1,19 +1,25 @@
 import { View, StyleSheet } from 'react-native';
+import { Palette, Radii, Spacing, Shadows } from '../theme';
 
-export default function GlassCard({ children, style }: any) {
-  return <View style={[styles.card, style]}>{children}</View>;
+interface GlassCardProps {
+  children: React.ReactNode;
+  style?: any;
+}
+
+export default function GlassCard({ children, style }: GlassCardProps) {
+  return <View style={[styles.card, Shadows.card, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#151C2C',
-    borderRadius: 22,
-    padding: 16,
+    backgroundColor: Palette.glassBg,
+    borderRadius: Radii.xl,
+    padding: Spacing.lg,
 
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: Palette.glassBorder,
 
-    shadowColor: '#7C3AED',
+    shadowColor: Palette.primary,
     shadowOpacity: 0.12,
     shadowRadius: 14,
     shadowOffset: {

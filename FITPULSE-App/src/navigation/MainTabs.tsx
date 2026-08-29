@@ -8,6 +8,8 @@ import ActivitiesScreen from '../screens/activity/ActivitiesScreen';
 import RecommendationScreen from '../screens/recommendation/RecommendationScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
+import { Palette, Layout } from '../theme';
+
 const Tab = createBottomTabNavigator();
 
 function AddButton() {
@@ -32,6 +34,8 @@ export default function MainTabs() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: Palette.primary,
+        tabBarInactiveTintColor: Palette.textMuted,
       }}
     >
       <Tab.Screen
@@ -42,7 +46,7 @@ export default function MainTabs() {
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
               size={24}
-              color={focused ? '#7C3AED' : '#7B849C'}
+              color={focused ? Palette.primary : Palette.textMuted}
             />
           ),
         }}
@@ -56,7 +60,7 @@ export default function MainTabs() {
             <MaterialCommunityIcons
               name="dumbbell"
               size={24}
-              color={focused ? '#22D3EE' : '#7B849C'}
+              color={focused ? Palette.secondary : Palette.textMuted}
             />
           ),
         }}
@@ -78,7 +82,7 @@ export default function MainTabs() {
             <Ionicons
               name={focused ? 'sparkles' : 'sparkles-outline'}
               size={24}
-              color={focused ? '#8B5CF6' : '#7B849C'}
+              color={focused ? Palette.accent : Palette.textMuted}
             />
           ),
         }}
@@ -92,7 +96,7 @@ export default function MainTabs() {
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
               size={24}
-              color={focused ? '#7C3AED' : '#7B849C'}
+              color={focused ? Palette.primary : Palette.textMuted}
             />
           ),
         }}
@@ -104,13 +108,20 @@ export default function MainTabs() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    left: 18,
-    right: 18,
-    bottom: 18,
-    height: 72,
-    borderRadius: 22,
-    backgroundColor: '#111827',
+    left: Layout.tabBarMargin,
+    right: Layout.tabBarMargin,
+    bottom: Layout.tabBarMargin,
+    height: Layout.tabBarHeight,
+    borderRadius: Layout.tabBarRadius,
+    backgroundColor: Palette.surface,
     borderTopWidth: 0,
+    borderWidth: 1,
+    borderColor: Palette.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
 
   fab: {
@@ -123,10 +134,15 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#7C3AED',
+    backgroundColor: Palette.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 5,
-    borderColor: '#070B16',
+    borderColor: Palette.bg,
+    shadowColor: Palette.primary,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
 });

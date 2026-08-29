@@ -7,13 +7,17 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+
+import { useAIStore } from '../../store/aiStore';
+import { useAuthStore } from '../../store/authStore';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import GlassCard from '../../components/GlassCard';
 import ProgressRing from '../../components/ProgressRing';
-import { Colors } from '../../theme/colors';
+import { Palette } from '../../theme/colors';
 
 import { getActivities } from '../../api/activityApi';
 import { getMe } from '../../api/userApi';
@@ -42,9 +46,18 @@ interface User {
 export default function DashboardScreen() {
   const navigation = useNavigation<any>();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    workout,
+    recovery,
+    generateWorkout,
+    analyzeRecovery,
+  } = useAIStore();
+
+  const { user } = useAuthStore();
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -53,7 +66,7 @@ export default function DashboardScreen() {
         getActivities(),
       ]);
 
-      setUser(userData);
+      setProfile(userData);
       setActivities(activityData);
     } catch (error) {
       console.log('Dashboard Error:', error);
@@ -108,31 +121,20 @@ export default function DashboardScreen() {
 
   const weekData = [85, 60, 35, 72, 45, 65, 50];
 
-  const {
-    generateWorkout,
-    analyzeRecovery,
-    weeklyReflection
-  } = useAIStore();
 
-  useEffect(() => {
+useEffect(() => {
 
-    generateWorkout(1,22);
+  if (!user?.id) return;
 
-    analyzeRecovery({
-      sleepHours:7,
-      soreness:"LOW",
-      fatigue:"LOW"
-    });
+  generateWorkout(user.id, 22);
 
-    weeklyReflection({
-      userId:1,
-      workoutsCompleted:5,
-      recoveryDays:2,
-      averageProtein:145,
-      averageSleep:7
-    });
+  analyzeRecovery({
+    sleepHours: 7,
+    soreness: "LOW",
+    fatigue: "LOW",
+  });
 
-  },[]);
+}, [user?.id]);
 
   return (
     <View style={styles.container}>
@@ -157,7 +159,7 @@ export default function DashboardScreen() {
           </Text>
 
           <Text style={styles.title}>
-            {user?.name ?? user?.fullName ?? 'Fitness Athlete'}
+            {profile?.name ?? profile?.fullName ?? "Fitness Athlete"}
           </Text>
 
           <Text style={styles.date}>
@@ -165,6 +167,57 @@ export default function DashboardScreen() {
           </Text>
 
           <GlassCard style={styles.heroCard}>
+
+          <View style={styles.aiCard}>
+
+            <View style={styles.aiHeader}>
+              <Ionicons name="sparkles" size={18} color={Palette.secondary} />
+              <Text style={styles.aiLabel}>Today's AI Workout</Text>
+            </View>
+
+            <Text style={styles.aiWorkout}>
+              {workout?.workouts?.[0] ?? "Generating..."}
+            </Text>
+
+            <Text style={styles.aiGoal}>
+              {workout?.goal ?? "Build Muscle"}
+            </Text>
+
+          </View>
+
+          <View style={styles.aiCard}>
+
+            <View style={styles.aiHeader}>
+              <Ionicons name="heart" size={18} color={Palette.success} />
+              <Text style={styles.aiLabel}>Recovery Score</Text>
+            </View>
+
+            <Text style={styles.recoveryScore}>
+              {recovery?.recoveryScore ?? "--"}
+            </Text>
+
+            <Text style={styles.recoveryText}>
+              {recovery?.recommendation ?? "Analyzing recovery..."}
+            </Text>
+
+          </View>
+
+
+          <View style={styles.aiCard}>
+
+            <View style={styles.aiHeader}>
+              <Ionicons name="bulb" size={18} color={Palette.warning} />
+              <Text style={styles.aiLabel}>AI Coach Tip</Text>
+            </View>
+
+            <Text style={styles.tip}>
+              {recovery?.explanation ??
+                "Maintain 7–8 hours of sleep for optimal muscle recovery."}
+            </Text>
+
+          </View>
+
+
             <View style={styles.row}>
               <View>
                 <Text style={styles.small}>
@@ -317,8 +370,8 @@ export default function DashboardScreen() {
                           height,
                           backgroundColor:
                             index === 6
-                              ? '#22D3EE'
-                              : '#7C3AED',
+                              ? Palette.secondary
+                              : Palette.primary,
                         },
                       ]}
                     />
@@ -430,7 +483,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: Palette.bg,
   },
 
   hero: {
@@ -617,4 +670,52 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
   },
+
+aiCard:{
+  backgroundColor:"#111827",
+  borderRadius:20,
+  padding:18,
+  marginBottom:14
+},
+
+aiHeader:{
+  flexDirection:"row",
+  alignItems:"center"
+},
+
+aiLabel:{
+  color:"#22D3EE",
+  fontWeight:"700",
+  marginLeft:8
+},
+
+aiWorkout:{
+  color:"#FFFFFF",
+  fontSize:22,
+  fontWeight:"800",
+  marginTop:12
+},
+
+aiGoal:{
+  color:"#94A3B8",
+  marginTop:4
+},
+
+recoveryScore:{
+  color:"#4ADE80",
+  fontSize:34,
+  fontWeight:"800",
+  marginTop:12
+},
+
+recoveryText:{
+  color:"#CBD5E1",
+  marginTop:6
+},
+
+tip:{
+  color:"#E5E7EB",
+  marginTop:10,
+  lineHeight:22
+}
 });
