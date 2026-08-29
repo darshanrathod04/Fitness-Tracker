@@ -6,7 +6,7 @@
 //  - iOS simulator:    http://localhost:8080
 // Override without editing code via the EXPO_PUBLIC_API_URL env var.
 
-const DEFAULT_API_URL = 'http:///10.164.252.38:8080/api';
+const DEFAULT_API_URL = 'http:///10.230.18.38:8080/api';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.trim() || DEFAULT_API_URL;

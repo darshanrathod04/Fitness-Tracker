@@ -108,6 +108,32 @@ export default function DashboardScreen() {
 
   const weekData = [85, 60, 35, 72, 45, 65, 50];
 
+  const {
+    generateWorkout,
+    analyzeRecovery,
+    weeklyReflection
+  } = useAIStore();
+
+  useEffect(() => {
+
+    generateWorkout(1,22);
+
+    analyzeRecovery({
+      sleepHours:7,
+      soreness:"LOW",
+      fatigue:"LOW"
+    });
+
+    weeklyReflection({
+      userId:1,
+      workoutsCompleted:5,
+      recoveryDays:2,
+      averageProtein:145,
+      averageSleep:7
+    });
+
+  },[]);
+
   return (
     <View style={styles.container}>
       <ScrollView

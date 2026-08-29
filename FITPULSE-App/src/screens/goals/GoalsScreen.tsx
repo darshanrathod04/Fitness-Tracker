@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react';
+import { useAIStore } from "../store/aiStore";
+import { useAuthStore } from "../store/authStore";
 import {
   View,
   Text,
@@ -33,6 +35,13 @@ export default function GoalsScreen() {
   const [type, setType] = useState<GoalType>('DAILY_CALORIES');
   const [target, setTarget] = useState('');
 
+  const { saveGoal, loading } = useAIStore();
+  const { user } = useAuthStore();
+
+  const [experience, setExperience] = useState("Beginner");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+
   const load = useCallback(async () => {
     try {
       setGoals(await getGoals());
@@ -53,24 +62,55 @@ export default function GoalsScreen() {
     setRefreshing(false);
   };
 
-  const save = async () => {
-    if (!title.trim() || !target) {
-      return Alert.alert('Validation', 'Title and target are required');
-    }
-    try {
-      await createGoal({
-        title: title.trim(),
-        type,
-        targetValue: Number(target),
-      });
-      setModal(false);
-      setTitle('');
-      setTarget('');
-      await load();
-    } catch (e) {
-      Alert.alert('Error', 'Could not create goal');
-    }
-  };
+ const save = async () => {
+
+   if (!title.trim() || !target) {
+     return Alert.alert(
+       "Validation",
+       "Title and target are required"
+     );
+   }
+
+   try {
+
+     // Existing Fitness Goal
+     await createGoal({
+       title: title.trim(),
+       type,
+       targetValue: Number(target),
+     });
+
+     // AI Goal
+     await saveGoal(user.id, {
+       goal: title.trim(),
+       experience,
+       targetCalories: Number(calories),
+       targetProtein: Number(protein),
+     });
+
+     setModal(false);
+
+     setTitle("");
+     setTarget("");
+     setCalories("");
+     setProtein("");
+     setExperience("Beginner");
+
+     await load();
+
+     Alert.alert(
+       "Success",
+       "Goal saved and AI Coach updated."
+     );
+
+   } catch {
+
+     Alert.alert(
+       "Error",
+       "Could not save AI Goal"
+     );
+   }
+ };
 
   const onToggle = async (g: Goal) => {
     const next: GoalStatus = g.completed ? 'ACTIVE' : 'COMPLETED';
@@ -144,13 +184,38 @@ export default function GoalsScreen() {
               onChangeText={setTarget}
             />
 
+            <TextInput
+              style={styles.input}
+              placeholder="Experience (Beginner / Intermediate)"
+              value={experience}
+              onChangeText={setExperience}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Daily Calories"
+              keyboardType="numeric"
+              value={calories}
+              onChangeText={setCalories}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Daily Protein (g)"
+              keyboardType="numeric"
+              value={protein}
+              onChangeText={setProtein}
+            />
+
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancel} onPress={() => setModal(false)}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.save} onPress={save}>
-                <Text style={styles.saveText}>Create</Text>
+              <TouchableOpacity style={styles.save} onPress={save} disabled={loading}>
+                <Text style={styles.saveText}>
+                  {loading ? "Saving..." : "Create"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
